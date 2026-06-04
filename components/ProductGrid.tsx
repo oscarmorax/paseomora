@@ -16,7 +16,7 @@ const PRODUCTOS_MUESTRA = [
     titulo: "Cafetera Expresso Automática Premium",
     tienda: "Boutique del Hogar",
     precio: 1890000,
-    imagen: "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e5?auto=format&fit=crop&w=600&q=80",
+    imagen: "https://images.unsplash.com/photo-1510972527921-ce0415891ddf?auto=format&fit=crop&w=600&q=80",
     rating: 4.9,
   },
   {
