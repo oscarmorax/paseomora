@@ -1,45 +1,21 @@
 'use client';
-import React, { useState } from 'react';
-import { Star, ShoppingCart, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star, ShoppingCart, Check, Loader2 } from 'lucide-react';
 import { useCart } from './CartContext';
+import { supabase } from '../app/supabase'; // Importamos el puente que creamos recién
 
-const PRODUCTOS_MUESTRA = [
-  {
-    id: 1,
-    titulo: "Smart TV 55\" Crystal UHD 4K",
-    tienda: "Electrónica Central",
-    precio: 3450000,
-    imagen: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=600&q=80",
-    rating: 4.8,
-  },
-  {
-    id: 2,
-    titulo: "Cafetera Expresso Automática Premium",
-    tienda: "Boutique del Hogar",
-    precio: 1890000,
-    imagen: "https://images.unsplash.com/photo-1510972527921-ce0415891ddf?auto=format&fit=crop&w=600&q=80",
-    rating: 4.9,
-  },
-  {
-    id: 3,
-    titulo: "Notebook Pro 14\" M3 16GB/512GB",
-    tienda: "TecnoPy",
-    precio: 12400000,
-    imagen: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80",
-    rating: 5.0,
-  },
-  {
-    id: 4,
-    titulo: "Championes de Running Edición Limitada",
-    tienda: "Maratón Sports",
-    precio: 750000,
-    imagen: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80",
-    rating: 4.6,
-  }
-];
+// Definimos la estructura de un producto
+interface Producto {
+  id: number;
+  titulo: string;
+  tienda: string;
+  precio: number;
+  imagen: string;
+  rating: number;
+}
 
-// Mini componente interno para el Botón Interactivo
-function BotonAgregar({ producto }: { producto: any }) {
+// Mini componente interno para el Botón Interactivo con feedback
+function BotonAgregar({ producto }: { producto: Producto }) {
   const { agregarAlCarrito } = useCart();
   const [agregado, setAgregado] = useState(false);
 
@@ -79,6 +55,37 @@ function BotonAgregar({ producto }: { producto: any }) {
 }
 
 export default function ProductGrid() {
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Efecto que se ejecuta al cargar la pantalla para traer los datos en vivo
+  useEffect(() => {
+    async function cargarProductos() {
+      try {
+        setCargando(true);
+        // Pedimos los datos a la tabla de Supabase ordenados por ID
+        const { data, error: supabaseError } = await supabase
+          .from('productos')
+          .select('*')
+          .order('id', { ascending: true });
+
+        if (supabaseError) throw supabaseError;
+        
+        if (data) {
+          setProductos(data as Producto[]);
+        }
+      } catch (err: any) {
+        console.error('Error cargando productos de Supabase:', err);
+        setError(err.message || 'Error al conectar con la base de datos');
+      } finally {
+        setCargando(false);
+      }
+    }
+
+    cargarProductos();
+  }, []);
+
   const formatearGs = (monto: number) => {
     return new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 }).format(monto);
   };
@@ -111,53 +118,69 @@ export default function ProductGrid() {
           <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight">Productos Destacados</h3>
           <p className="text-xs text-gray-500 mt-1">Selección premium de comercios verificados en Paseo Mora</p>
         </div>
-        <a href="#" className="text-sm font-semibold text-purple-700 hover:text-purple-900 transition-colors" style={{ color: '#572364' }}>
-          Ver todo →
-        </a>
+        <span className="text-sm font-semibold text-purple-700" style={{ color: '#572364' }}>
+          En vivo •
+        </span>
       </div>
 
-      {/* GRILLA RESPONSIVA DE TARJETAS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {PRODUCTOS_MUESTRA.map((producto) => (
-          <div key={producto.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer">
-            
-            <div className="relative pt-[100%] bg-gray-50 overflow-hidden">
-              <img 
-                src={producto.imagen} 
-                alt={producto.titulo}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
+      {/* ESTADO DE CARGA */}
+      {cargando && (
+        <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-500">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-900" style={{ color: '#572364' }} />
+          <p className="text-sm font-medium">Conectando con el servidor...</p>
+        </div>
+      )}
 
-            <div className="p-5 flex-1 flex flex-col justify-between">
-              <div>
-                <span className="text-[11px] font-bold text-purple-600 tracking-wider uppercase block mb-1" style={{ color: '#572364' }}>
-                  {producto.tienda}
-                </span>
-                <h4 className="text-sm font-bold text-gray-800 line-clamp-2 min-h-[40px] leading-snug group-hover:text-purple-900 transition-colors">
-                  {producto.titulo}
-                </h4>
+      {/* ESTADO DE ERROR */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-900 p-4 rounded-xl text-sm text-center my-10 font-medium">
+          ⚠️ Ocurrió un inconveniente al cargar el stock: {error}. Verificá tus credenciales en el archivo .env.local.
+        </div>
+      )}
+
+      {/* GRILLA RESPONSIVA DE TARJETAS (Solo si no está cargando) */}
+      {!cargando && !error && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {productos.map((producto) => (
+            <div key={producto.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer">
+              
+              <div className="relative pt-[100%] bg-gray-50 overflow-hidden">
+                <img 
+                  src={producto.imagen} 
+                  alt={producto.titulo}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-50 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-black text-gray-900">
-                    {formatearGs(producto.precio)}
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-purple-600 tracking-wider uppercase block mb-1" style={{ color: '#572364' }}>
+                    {producto.tienda}
                   </span>
-                  <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-lg text-amber-700 text-xs font-bold">
-                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                    {producto.rating}
-                  </div>
+                  <h4 className="text-sm font-bold text-gray-800 line-clamp-2 min-h-[40px] leading-snug group-hover:text-purple-900 transition-colors">
+                    {producto.titulo}
+                  </h4>
                 </div>
 
-                {/* AQUÍ USAMOS NUESTRO NUEVO BOTÓN INTELIGENTE */}
-                <BotonAgregar producto={producto} />
-              </div>
+                <div className="mt-4 pt-4 border-t border-gray-50 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-base font-black text-gray-900">
+                      {formatearGs(producto.precio)}
+                    </span>
+                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-lg text-amber-700 text-xs font-bold">
+                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                      {producto.rating}
+                    </div>
+                  </div>
 
+                  <BotonAgregar producto={producto} />
+                </div>
+
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
     </section>
   );
