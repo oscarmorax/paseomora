@@ -1,7 +1,8 @@
-import React from 'react';
-import { Star, ShoppingCart } from 'lucide-react';
+'use client';
+import React, { useState } from 'react';
+import { Star, ShoppingCart, Check } from 'lucide-react';
+import { useCart } from './CartContext';
 
-// Datos de prueba simulando el inventario de las tiendas de Paseo Mora
 const PRODUCTOS_MUESTRA = [
   {
     id: 1,
@@ -37,8 +38,47 @@ const PRODUCTOS_MUESTRA = [
   }
 ];
 
+// Mini componente interno para el Botón Interactivo
+function BotonAgregar({ producto }: { producto: any }) {
+  const { agregarAlCarrito } = useCart();
+  const [agregado, setAgregado] = useState(false);
+
+  const manejarClick = () => {
+    agregarAlCarrito(producto);
+    setAgregado(true);
+
+    // Volver al estado original después de 1.2 segundos
+    setTimeout(() => {
+      setAgregado(false);
+    }, 1200);
+  };
+
+  return (
+    <button 
+      onClick={manejarClick}
+      className={`w-full text-white font-semibold py-2.5 rounded-xl transition-all duration-300 text-xs flex items-center justify-center gap-2 shadow-sm ${
+        agregado 
+          ? 'bg-emerald-600 hover:bg-emerald-700' 
+          : 'bg-purple-900 hover:bg-purple-950'
+      }`}
+      style={!agregado ? { backgroundColor: '#572364' } : {}}
+    >
+      {agregado ? (
+        <>
+          <Check className="w-3.5 h-3.5" />
+          ¡Agregado! ✓
+        </>
+      ) : (
+        <>
+          <ShoppingCart className="w-3.5 h-3.5" />
+          Agregar al Carrito
+        </>
+      )}
+    </button>
+  );
+}
+
 export default function ProductGrid() {
-  // Función para formatear los precios a Guaraníes de forma elegante
   const formatearGs = (monto: number) => {
     return new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', minimumFractionDigits: 0 }).format(monto);
   };
@@ -81,7 +121,6 @@ export default function ProductGrid() {
         {PRODUCTOS_MUESTRA.map((producto) => (
           <div key={producto.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer">
             
-            {/* Contenedor de Imagen con Efecto Hover Zoom */}
             <div className="relative pt-[100%] bg-gray-50 overflow-hidden">
               <img 
                 src={producto.imagen} 
@@ -90,38 +129,29 @@ export default function ProductGrid() {
               />
             </div>
 
-            {/* Cuerpo de la Tarjeta */}
             <div className="p-5 flex-1 flex flex-col justify-between">
               <div>
-                {/* Nombre de la Tienda Aliada */}
                 <span className="text-[11px] font-bold text-purple-600 tracking-wider uppercase block mb-1" style={{ color: '#572364' }}>
                   {producto.tienda}
                 </span>
-                {/* Título del Producto */}
                 <h4 className="text-sm font-bold text-gray-800 line-clamp-2 min-h-[40px] leading-snug group-hover:text-purple-900 transition-colors">
                   {producto.titulo}
                 </h4>
               </div>
 
-              {/* Fila de Calificación e Info */}
               <div className="mt-4 pt-4 border-t border-gray-50 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  {/* Precio Formateado en Guaraníes */}
                   <span className="text-base font-black text-gray-900">
                     {formatearGs(producto.precio)}
                   </span>
-                  {/* Calificación en Estrellas */}
                   <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-lg text-amber-700 text-xs font-bold">
                     <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                     {producto.rating}
                   </div>
                 </div>
 
-                {/* Botón de Agregar al Carrito */}
-                <button className="w-full bg-gray-900 text-white font-semibold py-2.5 rounded-xl hover:bg-gray-800 transition-colors text-xs flex items-center justify-center gap-2 shadow-sm group-hover:bg-purple-900" style={{ backgroundColor: '#572364' }}>
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                  Agregar al Carrito
-                </button>
+                {/* AQUÍ USAMOS NUESTRO NUEVO BOTÓN INTELIGENTE */}
+                <BotonAgregar producto={producto} />
               </div>
 
             </div>
