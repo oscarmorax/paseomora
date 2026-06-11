@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import Header from '../components/Header';
-import { ShoppingBag, ArrowUpRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { ShoppingBag, ArrowUpRight, ShieldCheck, Sparkles, Compass, Eye, Shirt, Sparkle } from 'lucide-react';
 
 const CATALOGO_EXCLUSIVO = [
   {
@@ -35,6 +35,23 @@ const CATALOGO_EXCLUSIVO = [
     precio: "Gs. 2.100.000",
     imagen: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80",
     categoria: "Prendas"
+  }
+];
+
+const CATEGORIAS_CURADAS = [
+  {
+    id: "cat-1",
+    titulo: "Sastrería & Líneas Crudas",
+    subtitulo: "Inspiración Jacob Elordi",
+    imagen: "https://images.unsplash.com/photo-1534030347209-467a5b0ad3e6?auto=format&fit=crop&w=800&q=80",
+    ancho: "lg:col-span-7"
+  },
+  {
+    id: "cat-2",
+    titulo: "Siluetas Vanguardistas",
+    subtitulo: "Estilo Kendall Jenner",
+    imagen: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
+    ancho: "lg:col-span-5"
   }
 ];
 
@@ -82,8 +99,6 @@ export default function Home() {
           {/* Bloque de Video e Imagen Asegurada contra Fallas */}
           <div className="lg:col-span-7 order-1 lg:order-2">
             <div className="relative aspect-[4/3] sm:aspect-[16/10] bg-gray-100 rounded-3xl overflow-hidden shadow-2xl group">
-              
-              {/* Agregamos la imagen de poster fija para evitar la caja gris vacía */}
               <video 
                 autoPlay 
                 loop 
@@ -133,7 +148,7 @@ export default function Home() {
       </section>
 
       {/* VITRINA DE PRODUCTOS SEMÁNTICA */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-4 border-b border-gray-100 pb-6">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-[0.25em]" style={{ color: '#572364' }}>
@@ -148,7 +163,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Grilla */}
+        {/* Grilla de Catálogo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {CATALOGO_EXCLUSIVO.map((prod) => (
             <div key={prod.id} className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100/60 shadow-sm hover:shadow-xl hover:shadow-purple-900/[0.02] transition-all duration-500">
@@ -194,7 +209,149 @@ export default function Home() {
             </div>
           ))}
         </div>
-      </main>
+      </section>
+
+      {/* NUEVA SECCIÓN: ENFOQUE DE DISEÑO ASIMÉTRICO (Estilo Kendall & Jacob) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          
+          <div className="relative aspect-[4/5] bg-gray-100 rounded-3xl overflow-hidden shadow-xl">
+            <img 
+              src="https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&w=1000&q=80" 
+              alt="Estilo Contemporáneo Urbano" 
+              className="w-full h-full object-cover grayscale-[20%]"
+            />
+            <div className="absolute inset-0 bg-black/20"></div>
+          </div>
+
+          <div className="space-y-8 max-w-lg">
+            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em]" style={{ color: '#572364' }}>
+              <Shirt className="w-3.5 h-3.5" /> Estética Contemporánea
+            </div>
+            
+            <h2 className="text-3xl md:text-5xl font-normal text-gray-900 font-serif leading-tight tracking-tight">
+              Líneas limpias. <br />
+              Identidad <span className="italic font-light text-gray-700">sin esfuerzo</span>.
+            </h2>
+            
+            <p className="text-sm font-light leading-relaxed text-gray-600 space-y-4">
+              Nuestra propuesta rompe el molde tradicional. Fusionamos prendas de corte impecable, siluetas amplias y una paleta neutra pensada para quienes entienden que el verdadero lujo no grita; se nota a la distancia.
+            </p>
+
+            <blockquote className="border-l-2 pl-4 italic text-sm text-gray-500" style={{ borderColor: '#572364' }}>
+              "La sofisticación moderna no distingue géneros, celebra la estructura y la libertad de portar una pieza única."
+            </blockquote>
+
+            <div className="pt-2">
+              <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest pb-1 border-b-2 border-gray-900 hover:text-[#572364] hover:border-[#572364] transition-all">
+                Explorar el Manifiesto Urbano <ArrowUpRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* NUEVA SECCIÓN: GRANDES CATEGORÍAS EDITORIALES */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mb-20">
+        <div className="mb-12">
+          <span className="text-[10px] font-bold uppercase tracking-[0.25em]" style={{ color: '#572364' }}>
+            Curaduría de Armario
+          </span>
+          <h2 className="text-3xl font-normal text-gray-900 font-serif tracking-tight mt-1">
+            Explorar por Inspiración
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {CATEGORIAS_CURADAS.map((cat) => (
+            <div 
+              key={cat.id} 
+              className={`${cat.ancho} relative aspect-[16/10] sm:aspect-[21/10] lg:aspect-auto lg:h-[450px] rounded-3xl overflow-hidden group shadow-md`}
+            >
+              <img 
+                src={cat.imagen} 
+                alt={cat.titulo}
+                className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-103 grayscale-[15%]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+              
+              <div className="absolute bottom-8 left-8 right-8 flex items-end justify-between">
+                <div className="text-white space-y-1">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-purple-200">
+                    {cat.subtitulo}
+                  </p>
+                  <h3 className="text-xl md:text-2xl font-normal font-serif tracking-wide">
+                    {cat.titulo}
+                  </h3>
+                </div>
+                <button className="bg-white/90 backdrop-blur-md p-4 rounded-full text-gray-900 shadow-xl transition-all duration-300 transform group-hover:scale-110 hover:bg-white">
+                  <Compass className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* PIE DE PÁGINA (FOOTER) INSTITUCIONAL */}
+      <footer className="bg-white border-t border-gray-100 pt-16 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 pb-12 border-b border-gray-100">
+            
+            {/* Columna Marca */}
+            <div className="space-y-4">
+              <div className="font-serif text-xl tracking-tight">
+                <span className="text-gray-800 font-normal">Paseo</span>
+                <span style={{ color: '#572364', fontWeight: 600 }}>Mora</span>
+              </div>
+              <p className="text-xs font-light leading-relaxed text-gray-400">
+                La plataforma definitiva de moda de autor y piezas curadas en Paraguay.
+              </p>
+            </div>
+
+            {/* Columna Enlaces - Plataforma */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900">Plataforma</h4>
+              <ul className="space-y-2 text-xs font-light text-gray-500">
+                <li><a href="#" className="hover:text-gray-950 transition-all">Diseñadores Locales</a></li>
+                <li><a href="#" className="hover:text-gray-950 transition-all">Nuevos Lanzamientos</a></li>
+                <li><a href="#" className="hover:text-gray-950 transition-all">Cómo Vender</a></li>
+              </ul>
+            </div>
+
+            {/* Columna Enlaces - Soporte */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900">Soporte Premium</h4>
+              <ul className="space-y-2 text-xs font-light text-gray-500">
+                <li><a href="#" className="hover:text-gray-950 transition-all">Garantía de Autenticidad</a></li>
+                <li><a href="#" className="hover:text-gray-950 transition-all">Envíos y Entregas</a></li>
+                <li><a href="#" className="hover:text-gray-950 transition-all">Contacto Directo</a></li>
+              </ul>
+            </div>
+
+            {/* Columna Filosofía */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 flex items-center gap-1">
+                <Sparkle className="w-3 h-3" style={{ color: '#572364' }} /> Nuestra Visión
+              </h4>
+              <p className="text-xs font-light leading-relaxed text-gray-400">
+                Apostamos por la permanencia del diseño sobre lo masivo. Cada firma dentro de Paseo Mora comparte un estándar riguroso de confección.
+              </p>
+            </div>
+
+          </div>
+
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-light text-gray-400">
+            <p>© 2026 Paseo Mora. Todos los derechos reservados. Asunción, Paraguay.</p>
+            <div className="flex gap-6">
+              <a href="#" className="hover:text-gray-900 transition-all">Privacidad</a>
+              <a href="#" className="hover:text-gray-900 transition-all">Términos de Uso</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
     </div>
   );
 }
