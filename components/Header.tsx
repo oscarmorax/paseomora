@@ -3,11 +3,15 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, User, ShoppingCart, X, Loader2 } from 'lucide-react';
 import { supabase } from '../app/supabase';
+import { useCart } from './CartContext';
 
 export default function Header() {
   const [busquedaAbierta, setBusquedaAbierta] = useState(false);
   const [usuarioLogueado, setUsuarioLogueado] = useState(false);
   const [cargandoAuth, setCargandoAuth] = useState(true);
+  
+  // Enganchamos el estado global del carrito
+  const { setIsOpen, obtenerCantidadTotal } = useCart();
 
   useEffect(() => {
     async function chequearUsuario() {
@@ -28,7 +32,7 @@ export default function Header() {
     <header className="bg-[#FDFDFD] border-b border-gray-100 sticky top-0 z-50 shadow-sm font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4 relative">
         
-        {/* LOGO OFICIAL - Cargando tu PNG real de Canva */}
+        {/* LOGO OFICIAL */}
         <div className={`flex items-center flex-shrink-0 ${busquedaAbierta ? 'hidden md:flex' : 'flex'}`}>
           <Link href="/" className="flex items-center">
             <img 
@@ -82,7 +86,6 @@ export default function Header() {
             <Search className="w-5 h-5" />
           </button>
 
-          {/* BOTÓN VENDER (Castellano claro y tus colores oficiales) */}
           <Link 
             href={usuarioLogueado ? "/vendedor" : "/login"}
             className="hidden md:inline-block font-bold px-5 py-2.5 rounded-xl text-xs hover:bg-opacity-90 transition-all uppercase tracking-widest border"
@@ -91,7 +94,7 @@ export default function Header() {
             Vender en Paseo Mora
           </Link>
 
-         {/* CUENTA / INGRESO - Corregido el desfase del punto verde */}
+         {/* CUENTA / INGRESO */}
          {cargandoAuth ? (
             <div className="p-2.5 text-gray-300">
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -101,27 +104,32 @@ export default function Header() {
               href={usuarioLogueado ? "/vendedor" : "/login"} 
               className="p-2.5 text-[#545454] hover:bg-gray-50 rounded-xl transition-all flex items-center gap-2"
             >
-              {/* Contenedor relativo solo para el ícono */}
               <div className="relative">
                 <User className="w-5 h-5" style={usuarioLogueado ? { color: '#572364' } : {}} />
                 {usuarioLogueado && (
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full border border-white"></span>
                 )}
               </div>
-              
               <span className="text-xs font-bold uppercase tracking-wider hidden lg:inline text-gray-600">
                 {usuarioLogueado ? 'Mi Panel' : 'Ingresar'}
               </span>
             </Link>
           )}
 
-          {/* CARRITO */}
-          <button className="p-2.5 text-[#545454] hover:bg-gray-50 rounded-xl transition-all">
+          {/* CARRITO - Abre el panel e incluye indicador numérico dinámico */}
+          <button 
+            onClick={() => setIsOpen(true)}
+            className="p-2.5 text-[#545454] hover:bg-gray-50 rounded-xl transition-all relative cursor-pointer"
+          >
             <ShoppingCart className="w-5 h-5" />
+            {obtenerCantidadTotal() > 0 && (
+              <span className="absolute top-1 right-1 bg-gray-950 text-white font-mono text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-[#FDFDFD]">
+                {obtenerCantidadTotal()}
+              </span>
+            )}
           </button>
 
         </div>
-
       </div>
     </header>
   );

@@ -1,39 +1,36 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Package, DollarSign, ShoppingBag, PlusCircle, ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
+import { Package, DollarSign, ShoppingBag, PlusCircle, ArrowLeft, CheckCircle, Loader2, LogOut, ArrowUpRight, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation'; 
 import { supabase } from '../supabase'; 
 
 export default function VendedorDashboard() {
-  const router = useRouter(); // <--- Para poder redirigir al usuario entrometido
+  const router = useRouter();
   
-  // Estados para capturar lo que escribe el usuario
+  // Estados del formulario
   const [nombre, setNombre] = useState('');
   const [precio, setPrecio] = useState('');
   const [tienda, setTienda] = useState('');
   const [cargando, setCargando] = useState(false);
   const [notificacion, setNotificacion] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [autenticando, setAutenticando] = useState(true); // Nuevo estado de control
+  const [autenticando, setAutenticando] = useState(true);
 
-  // EL ESCUDO PROTECTOR (Verifica si el usuario inició sesión)
+  // Verificación estricta de sesión
   useEffect(() => {
     async function chequearSesion() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        // ¡Alerta! No está logueado, lo mandamos al login de una patada
         router.push('/login');
       } else {
-        // Todo en orden, puede ver el panel
         setAutenticando(false);
       }
     }
     chequearSesion();
   }, [router]);
 
-  // Función para cerrar sesión de forma segura
   const manejarCerrarSesion = async () => {
     await supabase.auth.signOut();
     router.push('/login');
@@ -48,16 +45,15 @@ export default function VendedorDashboard() {
       setCargando(true);
       setError(null);
 
-      // Una lista de imágenes espectaculares de Unsplash al azar
+      // Curaduría de imágenes de alta costura urbanas por defecto ante la falta de uploader
       const imagenesRandom = [
-        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80", 
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80", 
-        "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=600&q=80", 
-        "https://images.unsplash.com/photo-1560343090-f0409e92791a?auto=format&fit=crop&w=600&q=80"  
+        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80", 
+        "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=600&q=80", 
+        "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=600&q=80", 
+        "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=600&q=80"  
       ];
       const imagenSeleccionada = imagenesRandom[Math.floor(Math.random() * imagenesRandom.length)];
 
-      // ENVIAR LOS DATOS EN CALIENTE A SUPABASE
       const { error: errorSupabase } = await supabase
         .from('productos')
         .insert([
@@ -66,180 +62,180 @@ export default function VendedorDashboard() {
             tienda: tienda, 
             precio: parseFloat(precio), 
             imagen: imagenSeleccionada,
-            rating: parseFloat((Math.random() * (5.0 - 4.2) + 4.2).toFixed(1)) 
+            rating: parseFloat((Math.random() * (5.0 - 4.5) + 4.5).toFixed(1)) 
           }
         ]);
 
       if (errorSupabase) throw errorSupabase;
 
-      // Si todo sale bien, disparamos el éxito y limpiamos los inputs
       setNotificacion(true);
       setNombre('');
       setPrecio('');
       setTienda('');
 
-      // Apagar notificación tras 4 segundos
       setTimeout(() => setNotificacion(false), 4000);
 
     } catch (err: any) {
       console.error("Error al subir el producto:", err);
-      setError(err.message || "No se pudo guardar el producto.");
+      setError(err.message || "No se pudo procesar el alta del producto.");
     } finally {
       setCargando(false);
     }
   };
 
-  // Si todavía está verificando la sesión con Supabase, mostramos una pantalla de carga sutil
   if (autenticando) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-3 text-gray-500">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#572364' }} />
-        <p className="text-sm font-medium">Verificando credenciales de seguridad...</p>
+      <div className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center gap-4 text-[#545454]">
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#572364' }} />
+        <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-60">Verificando Credenciales de Seguridad</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FDFDFD] flex flex-col font-sans antialiased text-[#545454]">
       
-      {/* BARRA SUPERIOR DEL PANEL */}
-      <nav className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-50 rounded-xl transition-all">
-              <ArrowLeft className="w-5 h-5" />
+      {/* NAVEGACIÓN SUPERIOR EDITORIAL */}
+      <nav className="bg-white border-b border-gray-100 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <Link href="/" className="text-gray-400 hover:text-gray-900 transition-colors p-1.5">
+              <ArrowLeft className="w-4 h-4" />
             </Link>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xl font-black tracking-tight" style={{ color: '#545454' }}>Paseo</span>
-              <span className="text-xl font-black tracking-tight" style={{ color: '#572364' }}>Mora</span>
-              <span className="ml-2 bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider" style={{ backgroundColor: '#fcf7ff', color: '#572364' }}>
+            <div className="flex items-center font-serif text-xl tracking-tight">
+              <span style={{ color: '#545454', fontWeight: 400 }}>Paseo</span>
+              <span style={{ color: '#572364', fontWeight: 600 }}>Mora</span>
+              <span className="ml-3 border-l border-gray-200 pl-3 text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400">
                 Seller Center
               </span>
             </div>
           </div>
           
-          {/* SECCIÓN ACTUALIZADA CON EL BOTÓN SALIR */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-xs" style={{ backgroundColor: '#fcf7ff', color: '#572364' }}>
-                MT
+              <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center font-serif text-xs font-bold bg-gray-50 text-[#572364]">
+                M
               </div>
-              <span className="text-xs font-semibold text-gray-700 hidden sm:inline">Mi Tienda Aliada</span>
+              <span className="text-xs font-medium text-gray-800 hidden sm:inline tracking-wide">Studio Asunción</span>
             </div>
             
-            {/* BOTÓN DE CERRAR SESIÓN */}
             <button 
               onClick={manejarCerrarSesion}
-              className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100/70 px-3 py-2 rounded-xl transition-all uppercase tracking-wider"
+              className="text-[10px] font-bold text-gray-400 hover:text-red-600 transition-colors uppercase tracking-widest flex items-center gap-1.5"
             >
+              <LogOut className="w-3.5 h-3.5" />
               Salir
             </button>
           </div>
         </div>
       </nav>
 
-      {/* CUERPO DEL PANEL */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+      {/* CUERPO PRINCIPAL DEL DASHBOARD */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
         
-        <div>
-          <h2 className="text-3xl font-black text-gray-900 tracking-tight">¡Bienvenido de vuelta, socio!</h2>
-          <p className="text-xs text-gray-500 mt-1">Acá tenés el control en tiempo real del rendimiento de tu comercio en Paseo Mora.</p>
+        {/* Encabezado */}
+        <div className="border-b border-gray-100 pb-6">
+          <h2 className="text-3xl font-normal text-gray-900 font-serif tracking-tight">Panel de Gestión</h2>
+          <p className="text-xs font-light text-gray-400 mt-1 tracking-wide">
+            Monitoreo analítico de stock, órdenes y rendimiento exclusivo en tiempo real.
+          </p>
         </div>
 
-        {/* NOTIFICACIÓN DE ÉXITO REAL */}
+        {/* Notificaciones Pulcras */}
         {notificacion && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 p-4 rounded-xl flex items-center gap-3 shadow-sm">
-            <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-            <span className="text-sm font-medium">¡Golazo! El producto fue insertado de forma real en la base de datos de Paseo Mora.</span>
+          <div className="bg-emerald-50/60 border border-emerald-100 text-emerald-900 px-5 py-4 rounded-xl flex items-center gap-3 shadow-inner text-xs font-medium tracking-wide">
+            <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <span>El artículo ha sido incorporado con éxito a la base de datos de Paseo Mora.</span>
           </div>
         )}
 
-        {/* ALERTA DE ERROR RESTRICCIONES */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-900 p-4 rounded-xl text-sm font-medium">
-            ⚠️ Ups, tuvimos un inconveniente: {error}
+          <div className="bg-red-50/60 border border-red-100 text-red-900 px-5 py-4 rounded-xl text-xs font-medium tracking-wide">
+            Huelga de sistema: {error}
           </div>
         )}
 
-        {/* TARJETAS DE MÉTRICAS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Ventas del Mes</span>
-              <p className="text-2xl font-black text-gray-900">Gs. 8.450.000</p>
+        {/* MATRIZ DE MÉTRICAS PREMIUM */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between transition-all hover:shadow-md">
+            <div className="space-y-2">
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">Facturación Mensual</span>
+              <p className="text-xl font-bold text-gray-900 tracking-tight font-mono">Gs. 8.450.000</p>
             </div>
-            <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
-              <DollarSign className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Órdenes Nuevas</span>
-              <p className="text-2xl font-black text-gray-900">12 Pedidos</p>
-            </div>
-            <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
-              <ShoppingBag className="w-6 h-6" />
+            <div className="p-3 bg-gray-50 rounded-xl text-gray-400 border border-gray-100">
+              <DollarSign className="w-5 h-5" />
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Productos Activos</span>
-              <p className="text-2xl font-black text-gray-900">45 Ítems</p>
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between transition-all hover:shadow-md">
+            <div className="space-y-2">
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">Órdenes Activas</span>
+              <p className="text-xl font-bold text-gray-900 tracking-tight font-mono">12 Pedidos</p>
             </div>
-            <div className="p-3 bg-purple-50 rounded-xl text-purple-600" style={{ backgroundColor: '#fcf7ff', color: '#572364' }}>
-              <Package className="w-6 h-6" />
+            <div className="p-3 bg-gray-50 rounded-xl text-gray-400 border border-gray-100">
+              <ShoppingBag className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between transition-all hover:shadow-md">
+            <div className="space-y-2">
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest block">Catálogo Exclusivo</span>
+              <p className="text-xl font-bold text-gray-900 tracking-tight font-mono">45 Ítems</p>
+            </div>
+            <div className="p-3 bg-gray-50/80 rounded-xl border border-gray-100" style={{ color: '#572364' }}>
+              <Package className="w-5 h-5" />
             </div>
           </div>
         </div>
 
-        {/* SECCIÓN DOS COLUMNAS */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* FORMULARIO Y REGISTROS ASIMÉTRICOS */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* FORMULARIO REAL CONECTADO */}
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6 h-fit">
+          {/* Carga de Productos */}
+          <div className="lg:col-span-5 bg-white p-6 sm:p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
             <div>
-              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <PlusCircle className="w-5 h-5" style={{ color: '#572364' }} />
-                Cargar Nuevo Producto
+              <h3 className="text-md font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-2 font-serif">
+                <PlusCircle className="w-4 h-4" style={{ color: '#572364' }} />
+                Registrar Ítem
               </h3>
-              <p className="text-xs text-gray-400 mt-1">Añadí stock a la vitrina en segundos.</p>
+              <p className="text-[11px] font-light text-gray-400 mt-1 leading-relaxed">
+                Asigná las propiedades clave para indexar la pieza de autor de inmediato.
+              </p>
             </div>
 
-            <form onSubmit={manejarSubidaProducto} className="space-y-4">
+            <form onSubmit={manejarSubidaProducto} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-600 uppercase">Nombre de la Tienda / Marca</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block pl-1">Firma / Atelier</label>
                 <input 
                   type="text" 
                   value={tienda}
                   onChange={(e) => setTienda(e.target.value)}
-                  placeholder="Ej. Casa Paraná o Tu marca propia" 
-                  className="w-full bg-gray-50 text-gray-800 placeholder-gray-400 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-purple-300 focus:bg-white transition-all text-sm"
+                  placeholder="Ej. Studio Asunción o Mora Atelier" 
+                  className="w-full bg-gray-50/50 text-gray-800 placeholder-gray-400/70 px-4 py-3 rounded-xl border border-gray-100 focus:outline-none focus:border-purple-200 focus:bg-white transition-all text-xs tracking-wide"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-600 uppercase">Nombre del Producto</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block pl-1">Nombre del Producto</label>
                 <input 
                   type="text" 
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Ej. Termo Coleman 1.9L Edición Especial" 
-                  className="w-full bg-gray-50 text-gray-800 placeholder-gray-400 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-purple-300 focus:bg-white transition-all text-sm"
+                  placeholder="Ej. Sobretodo Lino Estructurado '90s" 
+                  className="w-full bg-gray-50/50 text-gray-800 placeholder-gray-400/70 px-4 py-3 rounded-xl border border-gray-100 focus:outline-none focus:border-purple-200 focus:bg-white transition-all text-xs tracking-wide"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-600 uppercase">Precio (en Guaraníes)</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block pl-1">Valor Comercial (Gs.)</label>
                 <input 
                   type="number" 
                   value={precio}
                   onChange={(e) => setPrecio(e.target.value)}
-                  placeholder="Ej. 380000" 
-                  className="w-full bg-gray-50 text-gray-800 placeholder-gray-400 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-purple-300 focus:bg-white transition-all text-sm"
+                  placeholder="Ej. 1850000" 
+                  className="w-full bg-gray-50/50 text-gray-800 placeholder-gray-400/70 px-4 py-3 rounded-xl border border-gray-100 focus:outline-none focus:border-purple-200 focus:bg-white transition-all text-xs tracking-wide font-mono"
                   required
                 />
               </div>
@@ -247,53 +243,64 @@ export default function VendedorDashboard() {
               <button 
                 type="submit"
                 disabled={cargando}
-                className="w-full text-white font-bold py-3 rounded-xl shadow-md transition-all text-xs flex items-center justify-center gap-2 hover:bg-opacity-90 disabled:opacity-50"
+                className="w-full text-white font-bold py-3.5 rounded-xl transition-all text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-md shadow-purple-900/5 hover:bg-opacity-95 disabled:opacity-50 mt-2 transform hover:-translate-y-0.5"
                 style={{ backgroundColor: '#572364' }}
               >
                 {cargando ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Subiendo a la nube...
+                    Sincronizando...
                   </>
                 ) : (
-                  'Publicar en Paseo Mora'
+                  <>
+                    <Plus className="w-4 h-4" />
+                    Publicar Pieza
+                  </>
                 )}
               </button>
             </form>
           </div>
 
-          {/* TABLA DE PEDIDOS */}
-          <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+          {/* Tabla Editorial de Pedidos */}
+          <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Últimos Pedidos Recibidos</h3>
-              <p className="text-xs text-gray-400 mt-1">Monitoreá los estados de envío de tus compradores.</p>
+              <h3 className="text-md font-semibold text-gray-900 uppercase tracking-wider font-serif">
+                Historial de Órdenes
+              </h3>
+              <p className="text-[11px] font-light text-gray-400 mt-1 leading-relaxed">
+                Seguimiento logístico de los despachos exclusivos en el territorio nacional.
+              </p>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-gray-600">
+              <table className="w-full text-left text-xs text-gray-500 tracking-wide">
                 <thead>
-                  <tr className="border-b border-gray-100 text-xs text-gray-400 font-bold uppercase">
-                    <th className="pb-3">Pedido</th>
-                    <th className="pb-3">Cliente</th>
-                    <th className="pb-3">Monto</th>
-                    <th className="pb-3">Estado</th>
+                  <tr className="border-b border-gray-100 text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                    <th className="pb-4">Código</th>
+                    <th className="pb-4">Cliente / Región</th>
+                    <th className="pb-4">Monto</th>
+                    <th className="pb-4 text-right">Estado Logístico</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  <tr className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-4 font-bold text-gray-800">#PM-9842</td>
-                    <td className="py-4">Carlos Giménez (Asunción)</td>
-                    <td className="py-4 font-semibold text-gray-900">Gs. 750.000</td>
-                    <td className="py-4">
-                      <span className="bg-emerald-50 text-emerald-700 font-bold text-[10px] px-2 py-0.5 rounded-full">Entregado</span>
+                  <tr className="hover:bg-gray-50/40 transition-colors group">
+                    <td className="py-4 font-bold text-gray-800 font-mono">#PM-9842</td>
+                    <td className="py-4 text-gray-600 font-light">Carlos Giménez <span className="text-[10px] text-gray-400 block font-normal">Asunción</span></td>
+                    <td className="py-4 font-semibold text-gray-900 font-mono">Gs. 750.000</td>
+                    <td className="py-4 text-right">
+                      <span className="bg-gray-50 text-gray-700 border border-gray-100 font-bold text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-md">
+                        Entregado
+                      </span>
                     </td>
                   </tr>
-                  <tr className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-4 font-bold text-gray-800">#PM-9841</td>
-                    <td className="py-4">María Paz Cáceres (San Lorenzo)</td>
-                    <td className="py-4 font-semibold text-gray-900">Gs. 1.890.000</td>
-                    <td className="py-4">
-                      <span className="bg-amber-50 text-amber-700 font-bold text-[10px] px-2 py-0.5 rounded-full">En Proceso</span>
+                  <tr className="hover:bg-gray-50/40 transition-colors group">
+                    <td className="py-4 font-bold text-gray-800 font-mono">#PM-9841</td>
+                    <td className="py-4 text-gray-600 font-light">María Paz Cáceres <span className="text-[10px] text-gray-400 block font-normal">San Lorenzo</span></td>
+                    <td className="py-4 font-semibold text-gray-900 font-mono">Gs. 1.890.000</td>
+                    <td className="py-4 text-right">
+                      <span className="text-purple-700 font-bold text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-md" style={{ backgroundColor: '#fcf7ff' }}>
+                        En Proceso
+                      </span>
                     </td>
                   </tr>
                 </tbody>
