@@ -19,6 +19,7 @@ interface CartContextType {
   setIsOpen: (open: boolean) => void;
   obtenerTotal: () => number;
   obtenerCantidadTotal: () => number;
+  vaciarCarrito: () => void; // ← 1. Agregado en la interfaz
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -44,11 +45,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((itemsPrevios) => itemsPrevios.filter((item) => item.id !== id));
   };
 
+  // 2. Función para limpiar por completo el carrito al confirmar la orden
+  const vaciarCarrito = () => {
+    setItems([]);
+  };
+
   const obtenerTotal = () => items.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
   const obtenerCantidadTotal = () => items.reduce((acc, item) => acc + item.cantidad, 0);
 
   return (
-    <CartContext.Provider value={{ items, isOpen, agregarAlCarrito, removerDelCarrito, setIsOpen, obtenerTotal, obtenerCantidadTotal }}>
+    /* 3. Agregada la función vaciarCarrito en el value expuesto a la app */
+    <CartContext.Provider value={{ 
+      items, 
+      isOpen, 
+      agregarAlCarrito, 
+      removerDelCarrito, 
+      setIsOpen, 
+      obtenerTotal, 
+      obtenerCantidadTotal,
+      vaciarCarrito 
+    }}>
       {children}
     </CartContext.Provider>
   );

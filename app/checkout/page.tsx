@@ -4,31 +4,60 @@ import Header from '../../components/Header';
 import { useCart } from '../../components/CartContext';
 import { CreditCard, Landmark, QrCode, ShieldCheck, ArrowLeft, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+// IMPORTAMOS EL CLIENTE DE SUPABASE
+import { supabase } from '../supabase'; 
 
 export default function CheckoutPage() {
-  const { items, obtenerTotal } = useCart();
+  const { items, obtenerTotal, vaciarCarrito } = useCart(); // Agregamos vaciarCarrito para limpiar la bolsa al terminar
   
   // Estados del Formulario
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
   const [ciudad, setCiudad] = useState('Asunción');
   const [direccion, setDireccion] = useState('');
-  const [metodoPago, setMetodoPago] = useState('tarjeta'); // tarjeta, transferencia, qr
+  const [metodoPago, setMetodoPago] = useState('tarjeta');
+  const [cargando, setCargando] = useState(false); // Estado para bloquear el botón mientras se procesa
 
-  const manejarSubmit = (e: React.FormEvent) => {
+  const manejarSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Armamos la estructura básica que luego enviaremos a Supabase
-    const datosPedido = {
-      cliente: { nombre, telefono, ciudad, direccion },
-      productos: items,
-      total: obtenerTotal(),
-      pago: metodoPago,
-      fecha: new Date().toISOString()
-    };
+    if (cargando) return;
 
-    console.log("Procesando pedido en Paseo Mora:", datosPedido);
-    alert("¡Pedido simulado con éxito! Próximamente guardaremos esto en Supabase.");
+    setCargando(true);
+    
+    try {
+      // Insertamos los datos en la tabla exacta de Supabase
+      const { data, error } = await supabase
+        .from('pedidos')
+        .insert([
+          {
+            nombre,
+            telefono,
+            ciudad,
+            direccion,
+            metodo_pago: metodoPago,
+            productos: items, // Mandamos el array completo en formato JSONB
+            total: obtenerTotal(),
+            estado: 'Pendiente'
+          }
+        ]);
+
+      if (error) throw error;
+
+      // Si todo sale bien
+      alert("¡Pedido confirmado! Tu orden fue registrada en Paseo Mora de manera exitosa.");
+      
+      // Limpiamos los estados locales y el carrito
+      setNombre('');
+      setTelefono('');
+      setDireccion('');
+      vaciarCarrito(); // Resetea el carrito en el contexto global
+
+    } catch (error: any) {
+      console.error("Error al guardar el pedido:", error.message);
+      alert("Ocurrió un error al procesar tu pedido. Por favor, intentá de nuevo.");
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
@@ -59,7 +88,7 @@ export default function CheckoutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
             {/* COLUMNA IZQUIERDA: FORMULARIO (7 Columnas) */}
-            <form onSubmit={manejarSubmit} className="lg:col-span-7 space-y-10">
+            <form id="checkout-form" onSubmit={manejarSubmit} className="lg:col-span-7 space-y-10">
               
               {/* SECCIÓN 1: Datos de Entrega */}
               <div className="space-y-6">
@@ -73,16 +102,18 @@ export default function CheckoutPage() {
                     <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Nombre y Apellido *</label>
                     <input 
                       type="text" required placeholder="Ej. Juan Pérez"
+                      disabled={cargando}
                       value={nombre} onChange={(e) => setNombre(e.target.value)}
-                      className="w-full bg-gray-50/60 border border-gray-100 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-gray-900 font-medium transition-colors"
+                      className="w-full bg-gray-50/60 border border-gray-100 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-gray-900 font-medium transition-colors disabled:opacity-50"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Teléfono / WhatsApp *</label>
                     <input 
                       type="tel" required placeholder="Ej. 0981 123 456"
+                      disabled={cargando}
                       value={telefono} onChange={(e) => setTelefono(e.target.value)}
-                      className="w-full bg-gray-50/60 border border-gray-100 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-gray-900 font-medium transition-colors"
+                      className="w-full bg-gray-50/60 border border-gray-100 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-gray-900 font-medium transition-colors disabled:opacity-50"
                     />
                   </div>
                 </div>
@@ -92,7 +123,8 @@ export default function CheckoutPage() {
                     <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Ciudad *</label>
                     <select 
                       value={ciudad} onChange={(e) => setCiudad(e.target.value)}
-                      className="w-full bg-gray-50/60 border border-gray-100 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-gray-900 font-medium transition-colors"
+                      disabled={cargando}
+                      className="w-full bg-gray-50/60 border border-gray-100 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-gray-900 font-medium transition-colors disabled:opacity-50"
                     >
                       <option value="Asunción">Asunción</option>
                       <option value="Fernando de la Mora">Fernando de la Mora</option>
@@ -106,8 +138,9 @@ export default function CheckoutPage() {
                     <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Dirección Completa *</label>
                     <input 
                       type="text" required placeholder="Ej. Avda. Mariscal López 1234 c/ Perú"
+                      disabled={cargando}
                       value={direccion} onChange={(e) => setDireccion(e.target.value)}
-                      className="w-full bg-gray-50/60 border border-gray-100 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-gray-900 font-medium transition-colors"
+                      className="w-full bg-gray-50/60 border border-gray-100 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-gray-900 font-medium transition-colors disabled:opacity-50"
                     />
                   </div>
                 </div>
@@ -125,10 +158,10 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {/* Tarjeta */}
                   <div 
-                    onClick={() => setMetodoPago('tarjeta')}
+                    onClick={() => !cargando && setMetodoPago('tarjeta')}
                     className={`p-4 rounded-xl border text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
                       metodoPago === 'tarjeta' ? 'border-gray-900 bg-gray-950 text-white' : 'border-gray-100 bg-gray-50/40 hover:border-gray-300'
-                    }`}
+                    } ${cargando ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <CreditCard className="w-4 h-4" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Tarjeta Débito/Crédito</span>
@@ -136,10 +169,10 @@ export default function CheckoutPage() {
 
                   {/* Transferencia */}
                   <div 
-                    onClick={() => setMetodoPago('transferencia')}
+                    onClick={() => !cargando && setMetodoPago('transferencia')}
                     className={`p-4 rounded-xl border text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
                       metodoPago === 'transferencia' ? 'border-gray-900 bg-gray-950 text-white' : 'border-gray-100 bg-gray-50/40 hover:border-gray-300'
-                    }`}
+                    } ${cargando ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <Landmark className="w-4 h-4" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Transferencia</span>
@@ -147,10 +180,10 @@ export default function CheckoutPage() {
 
                   {/* QR */}
                   <div 
-                    onClick={() => setMetodoPago('qr')}
+                    onClick={() => !cargando && setMetodoPago('qr')}
                     className={`p-4 rounded-xl border text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
                       metodoPago === 'qr' ? 'border-gray-900 bg-gray-950 text-white' : 'border-gray-100 bg-gray-50/40 hover:border-gray-300'
-                    }`}
+                    } ${cargando ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <QrCode className="w-4 h-4" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Pago Seguro QR</span>
@@ -168,10 +201,11 @@ export default function CheckoutPage() {
               {/* Botón de envío exclusivo para móvil (se oculta en lg:) */}
               <button 
                 type="submit"
-                className="w-full lg:hidden text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-[0.25em] transition-all shadow-lg hover:opacity-95 transform hover:-translate-y-0.5 cursor-pointer"
+                disabled={cargando}
+                className="w-full lg:hidden text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-[0.25em] transition-all shadow-lg hover:opacity-95 transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#572364' }}
               >
-                Confirmar Pedido • {obtenerTotal().toLocaleString('es-PY')} ₲
+                {cargando ? "Procesando..." : `Confirmar Pedido • ${obtenerTotal().toLocaleString('es-PY')} ₲`}
               </button>
             </form>
 
@@ -214,13 +248,15 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Botón de envío exclusivo para Escritorio (se oculta en móvil) */}
+              {/* Botón de envío exclusivo para Escritorio con tipo SUBMIT vinculado al formulario */}
               <button 
-                onClick={manejarSubmit}
-                className="hidden lg:flex w-full text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-[0.25em] transition-all items-center justify-center shadow-lg hover:opacity-95 transform hover:-translate-y-0.5 cursor-pointer"
+                type="submit"
+                form="checkout-form"
+                disabled={cargando}
+                className="hidden lg:flex w-full text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-[0.25em] transition-all items-center justify-center shadow-lg hover:opacity-95 transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#572364' }}
               >
-                Confirmar Pedido
+                {cargando ? "Procesando..." : "Confirmar Pedido"}
               </button>
 
               <div className="flex items-center justify-center gap-2 text-[10px] text-gray-400 pt-2">
