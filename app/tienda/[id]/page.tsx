@@ -3,51 +3,99 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Header from '../../../components/Header';
 import Link from 'next/link';
-import { Store, ArrowLeft, Sparkles, MapPin } from 'lucide-react';
+import { Store, ArrowLeft, Sparkles, MapPin, Loader2 } from 'lucide-react';
+import { supabase } from '../../supabase';
 
-// Simulamos una base de datos de tiendas (Próximamente la vincularemos a Supabase de ser necesario)
-const DATOS_TIENDAS: Record<string, { nombre: string; descripcion: string; ciudad: string; banner: string }> = {
-  'mora-atelier': {
-    nombre: 'Mora Atelier',
-    descripcion: 'Prendas de cuero auténtico hechas a mano en Paraguay. Diseños atemporales con cortes contemporáneos y materia prima seleccionada.',
-    ciudad: 'Asunción, PY',
-    banner: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&auto=format&fit=crop&q=80'
-  },
-  'studio-asuncion': {
-    nombre: 'Studio Asunción',
-    descripcion: 'Sastrería y streetwear minimalista independiente. Redefiniendo los básicos urbanos con siluetas oversized y alta calidad textil.',
-    ciudad: 'San Lorenzo, PY',
-    banner: 'https://images.unsplash.com/photo-1479064555552-3ef4979f8908?w=1600&auto=format&fit=crop&q=80'
-  }
-};
+interface Tienda {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  ciudad: string;
+  banner: string;
+}
 
-// Simulamos la base de datos de productos para filtrar en tiempo real
-const TODOS_PRODUCTOS = [
-  { id: 1, titulo: "Lentes de sol 'Blackout' Acetato", precio: 1250000, marcaSlug: 'mora-atelier', imagen: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600&auto=format&fit=crop&q=80' },
-  { id: 2, titulo: "Campera Bomber de Cuero Oversized '90s", precio: 3400000, marcaSlug: 'mora-atelier', imagen: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&auto=format&fit=crop&q=80' },
-  { id: 3, titulo: "Pantalón Sastrero Negro Wide-Leg", precio: 850000, marcaSlug: 'studio-asuncion', imagen: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&auto=format&fit=crop&q=80' }
-];
+interface Producto {
+  id: number;
+  titulo: string;
+  precio: number;
+  imagen: string;
+  marca_id: string;
+}
 
 export default function PerfilTiendaPage() {
   const params = useParams();
   const idTienda = params?.id as string;
 
-  // Buscar la información de la tienda actual según el slug de la URL
-  const tienda = DATOS_TIENDAS[idTienda] || {
-    nombre: idTienda?.replace('-', ' '),
-    descripcion: 'Diseñador independiente aliado a la red de talentos de Paseo Mora.',
-    ciudad: 'Paraguay',
-    banner: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&auto=format&fit=crop&q=80'
-  };
+  // Estados de carga de datos reales de Supabase
+  const [tienda, setTienda] = useState<Tienda | null>(null);
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [cargando, setCargando] = useState(true);
 
-  // Filtrar los productos para que pertenezcan EXCLUSIVAMENTE a esta marca
-  const productosTienda = TODOS_PRODUCTOS.filter(p => p.marcaSlug === idTienda);
+  useEffect(() => {
+    if (!idTienda) return;
+
+    const cargarDatosTienda = async () => {
+      setCargando(true);
+      try {
+        // 1. Traer la información de la marca desde Supabase
+        const { data: datosTienda, error: errorTienda } = await supabase
+          .from('tiendas')
+          .select('*')
+          .eq('id', idTienda)
+          .single();
+
+        if (errorTienda) throw errorTienda;
+        setTienda(datosTienda);
+
+        // 2. Traer los productos asociados exclusivamente a esta marca
+        const { data: datosProductos, error: errorProductos } = await supabase
+          .from('productos')
+          .select('*')
+          .eq('marca_id', idTienda);
+
+        if (errorProductos) throw errorProductos;
+        setProductos(datosProductos || []);
+
+      } catch (error: any) {
+        console.error('Error al sincronizar el perfil de marca:', error.message);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    cargarDatosTienda();
+  }, [idTienda]);
+
+  if (cargando) {
+    return (
+      <div className="min-h-screen bg-[#FDFDFD] flex flex-col justify-center items-center gap-3 text-gray-400">
+        <Loader2 className="w-8 h-8 animate-spin text-[#4E3629]" />
+        <p className="text-xs font-bold uppercase tracking-widest">Sincronizando con Paseo Mora...</p>
+      </div>
+    );
+  }
+
+  // Si la tienda no existe en Supabase, mostramos un estado controlado de error
+  if (!tienda) {
+    return (
+      <div className="min-h-screen bg-[#FDFDFD]">
+        <Header />
+        <div className="max-w-md mx-auto text-center py-24 px-4 space-y-4">
+          <h2 className="text-xl font-bold text-gray-900">Marca no registrada</h2>
+          <p className="text-sm text-gray-500">La tienda que estás buscando no forma parte de la red de Paseo Mora todavía.</p>
+          <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold text-[#4E3629] underline">
+            <ArrowLeft className="w-3 h-3" /> Volver al inicio
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-[#545454] antialiased tracking-tight">
       <Header />
 
-      {/* BANNER DE LA MARCA (Hero Section de alta gama) */}
+      {/* BANNER DINÁMICO DESDE LA BASE DE DATOS */}
       <div className="relative h-64 md:h-80 bg-gray-900 overflow-hidden">
         <img 
           src={tienda.banner} 
@@ -76,20 +124,20 @@ export default function PerfilTiendaPage() {
         </div>
       </div>
 
-      {/* SECCIÓN DE CATÁLOGO EXCLUSIVO */}
+      {/* CATÁLOGO FILTRADO DESDE SUPABASE */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center gap-2 mb-8 border-b border-gray-100 pb-4">
           <Sparkles className="w-4 h-4 text-gray-400" />
-          <h2 className="text-xs font-black uppercase tracking-widest text-gray-900">Colección Disponible ({productosTienda.length})</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-gray-900">Colección Disponible ({productos.length})</h2>
         </div>
 
-        {productosTienda.length === 0 ? (
+        {productos.length === 0 ? (
           <div className="text-center py-16 bg-gray-50/50 rounded-2xl border border-gray-100 text-xs text-gray-400 font-medium">
             Próximamente se listarán las nuevas colecciones de esta marca en Paseo Mora.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {productosTienda.map((producto) => (
+            {productos.map((producto) => (
               <Link href={`/producto/${producto.id}`} key={producto.id} className="group block space-y-3 cursor-pointer">
                 <div className="aspect-[3/4] bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 relative">
                   <img 
