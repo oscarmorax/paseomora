@@ -1,9 +1,12 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '../components/Header';
-import Link from 'next/link'; // ← Importante: Agregamos esto para que funcione el componente <Link>
-import { ShoppingBag, ArrowUpRight, ShieldCheck, Sparkles, Compass, Shirt, Sparkle } from 'lucide-react';
+import Link from 'next/link';
+import { ShoppingBag, ArrowUpRight, ShieldCheck, Sparkles, Compass, Shirt, Sparkle, Layers } from 'lucide-react';
 import { useCart } from '../components/CartContext';
+
+// 1. Definimos la lista fija adaptada a las categorías de tu catálogo real
+const CATEGORIAS = ['Todos', 'Abrigos', 'Prendas', 'Calzados', 'Accesorios'];
 
 const CATALOGO_EXCLUSIVO = [
   {
@@ -63,11 +66,19 @@ const CATEGORIAS_CURADAS = [
 
 export default function Home() {
   const { agregarAlCarrito, setIsOpen } = useCart();
+  
+  // 2. Estado para controlar la categoría boutique seleccionada
+  const [categoriaActiva, setCategoriaActiva] = useState('Todos');
 
   const handleComprar = (prod: any) => {
     agregarAlCarrito(prod);
     setIsOpen(true); 
   };
+
+  // 3. Filtrado en tiempo real de tu array estático
+  const productosFiltrados = categoriaActiva === 'Todos'
+    ? CATALOGO_EXCLUSIVO
+    : CATALOGO_EXCLUSIVO.filter(p => p.categoria === categoriaActiva);
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-[#545454] antialiased selection:bg-purple-100 font-sans tracking-tight">
@@ -162,7 +173,8 @@ export default function Home() {
 
       {/* VITRINA DE PRODUCTOS CON CONEXIÓN AL CARRITO */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-16 gap-4 border-b border-gray-100 pb-8">
+        
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-4">
           <div>
             <span className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: '#572364' }}>
               Catálogo de Tendencias
@@ -171,63 +183,85 @@ export default function Home() {
               Piezas Destacadas
             </h2>
           </div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
-            Filtrando el mejor design local
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5">
+            <Layers className="w-3.5 h-3.5" /> Explorando: {categoriaActiva} ({productosFiltrados.length})
           </div>
         </div>
 
-        {/* AQUÍ ESTÁ EL CAMBIO SOLICITADO */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {CATALOGO_EXCLUSIVO.map((prod) => (
-            <div key={prod.id} className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-purple-900/[0.02] transition-all duration-500">
-              
-              {/* IMAGEN: Ahora es un Link dinámico */}
-              <Link href={`/producto/${prod.id}`} className="relative aspect-[3/4] w-full bg-gray-50 overflow-hidden cursor-pointer">
-                <img 
-                  src={prod.imagen} 
-                  alt={prod.titulo} 
-                  className="w-full h-full object-cover grayscale-[10%] contrast-[1.02] transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-                <span className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md text-gray-900 text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-black/5 shadow-sm">
-                  {prod.categoria}
-                </span>
-              </Link>
-
-              <div className="p-6 flex flex-col justify-between flex-1 space-y-6">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[10px] font-black tracking-widest uppercase">
-                    <span style={{ color: '#572364' }}>{prod.tienda}</span>
-                    {/* LINK EN "VER" */}
-                    <Link href={`/producto/${prod.id}`} className="text-gray-400 font-bold flex items-center gap-0.5 group-hover:text-gray-900 transition-colors cursor-pointer">
-                      Ver <ArrowUpRight className="w-3 h-3" />
-                    </Link>
-                  </div>
-                  
-                  {/* TÍTULO: Ahora es un Link dinámico */}
-                  <Link href={`/producto/${prod.id}`} className="block cursor-pointer">
-                    <h3 className="text-sm font-semibold text-gray-900 tracking-tight leading-snug line-clamp-2 hover:text-[#572364] transition-colors">
-                      {prod.titulo}
-                    </h3>
-                  </Link>
-                  <p className="text-sm font-medium pt-1 font-mono text-gray-600">
-                    {prod.precioTexto}
-                  </p>
-                </div>
-
-                {/* BOTÓN CON FUNCIÓN CONECTADA */}
-                <button 
-                  onClick={() => handleComprar(prod)}
-                  className="w-full text-white font-bold py-3.5 rounded-xl text-[10px] uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:bg-opacity-95 transform hover:-translate-y-0.5 cursor-pointer"
-                  style={{ backgroundColor: '#572364' }}
-                >
-                  <ShoppingBag className="w-3.5 h-3.5" />
-                  Agregar al carrito
-                </button>
-              </div>
-
-            </div>
+        {/* 4. BOTONES DE FILTRADO (Insertados con diseño coherente) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-8 mb-8 border-b border-gray-100 scrollbar-none">
+          {CATEGORIAS.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategoriaActiva(cat)}
+              className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all duration-300 cursor-pointer ${
+                categoriaActiva === cat
+                  ? 'bg-gray-950 text-white border-gray-950 shadow-sm scale-102'
+                  : 'bg-white text-gray-400 border-gray-100 hover:border-gray-300 hover:text-gray-900'
+              }`}
+            >
+              {cat}
+            </button>
           ))}
         </div>
+
+        {/* GRILLA DE PRODUCTOS FILTRADOS */}
+        {productosFiltrados.length === 0 ? (
+          <div className="text-center py-16 bg-gray-50/50 rounded-2xl border border-gray-100 text-xs text-gray-400 font-medium tracking-wide uppercase">
+            No hay artículos disponibles bajo la categoría {categoriaActiva}.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {productosFiltrados.map((prod) => (
+              <div key={prod.id} className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-purple-900/[0.02] transition-all duration-500">
+                
+                {/* IMAGEN */}
+                <Link href={`/producto/${prod.id}`} className="relative aspect-[3/4] w-full bg-gray-50 overflow-hidden cursor-pointer">
+                  <img 
+                    src={prod.imagen} 
+                    alt={prod.titulo} 
+                    className="w-full h-full object-cover grayscale-[10%] contrast-[1.02] transition-transform duration-700 ease-out group-hover:scale-105"
+                  />
+                  <span className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md text-gray-900 text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-black/5 shadow-sm">
+                    {prod.categoria}
+                  </span>
+                </Link>
+
+                <div className="p-6 flex flex-col justify-between flex-1 space-y-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[10px] font-black tracking-widest uppercase">
+                      <span style={{ color: '#572364' }}>{prod.tienda}</span>
+                      <Link href={`/producto/${prod.id}`} className="text-gray-400 font-bold flex items-center gap-0.5 group-hover:text-gray-900 transition-colors cursor-pointer">
+                        Ver <ArrowUpRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+                    
+                    {/* TÍTULO */}
+                    <Link href={`/producto/${prod.id}`} className="block cursor-pointer">
+                      <h3 className="text-sm font-semibold text-gray-900 tracking-tight leading-snug line-clamp-2 hover:text-[#572364] transition-colors">
+                        {prod.titulo}
+                      </h3>
+                    </Link>
+                    <p className="text-sm font-medium pt-1 font-mono text-gray-600">
+                      {prod.precioTexto}
+                    </p>
+                  </div>
+
+                  {/* BOTÓN CON FUNCIÓN CONECTADA */}
+                  <button 
+                    onClick={() => handleComprar(prod)}
+                    className="w-full text-white font-bold py-3.5 rounded-xl text-[10px] uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:bg-opacity-95 transform hover:-translate-y-0.5 cursor-pointer"
+                    style={{ backgroundColor: '#572364' }}
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    Agregar al carrito
+                  </button>
+                </div>
+
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* MANIFIESTO URBANO ASIMÉTRICO */}
