@@ -1,51 +1,13 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Link from 'next/link';
 import { ShoppingBag, ArrowUpRight, ShieldCheck, Sparkles, Compass, Shirt, Sparkle, Layers } from 'lucide-react';
 import { useCart } from '../components/CartContext';
+import { supabase } from './supabase'; // IMPORTAMOS TU INSTANCIA DE SUPABASE
 
-// 1. Definimos la lista fija adaptada a las categorías de tu catálogo real
-const CATEGORIAS = ['Todos', 'Abrigos', 'Prendas', 'Calzados', 'Accesorios'];
-
-const CATALOGO_EXCLUSIVO = [
-  {
-    id: 1,
-    titulo: "Lentes de Sol 'Blackout' Acetato Italiano",
-    tienda: "Studio Asunción",
-    precio: 1250000, 
-    precioTexto: "Gs. 1.250.000",
-    imagen: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=800&q=80",
-    categoria: "Accesorios"
-  },
-  {
-    id: 2,
-    titulo: "Campera Bomber de Cuero Oversized '90s",
-    tienda: "Mora Atelier",
-    precio: 3400000,
-    precioTexto: "Gs. 3.400.000",
-    imagen: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=800&q=80",
-    categoria: "Abrigos"
-  },
-  {
-    id: 3,
-    titulo: "Botas de Asfalto en Cuero Crudo Estilizado",
-    tienda: "The Baseline",
-    precio: 1850000,
-    precioTexto: "Gs. 1.850.000",
-    imagen: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&w=800&q=80",
-    categoria: "Calzados"
-  },
-  {
-    id: 4,
-    titulo: "Vestido Acanalado 'Sienna' Espalda Descubierta",
-    tienda: "Mora Atelier",
-    precio: 2100000,
-    precioTexto: "Gs. 2.100.000",
-    imagen: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80",
-    categoria: "Prendas"
-  }
-];
+// Categorías boutique globales
+const CATEGORIAS = ['Todos', 'Abrigos', 'Prendas', 'Calzados', 'Accesorios', 'Camperas', 'Pantalones'];
 
 const CATEGORIAS_CURADAS = [
   {
@@ -67,18 +29,53 @@ const CATEGORIAS_CURADAS = [
 export default function Home() {
   const { agregarAlCarrito, setIsOpen } = useCart();
   
-  // 2. Estado para controlar la categoría boutique seleccionada
+  // ESTADOS REALES DE SUPABASE
+  const [productos, setProductos] = useState<any[]>([]);
   const [categoriaActiva, setCategoriaActiva] = useState('Todos');
+  const [cargando, setCargando] = useState(true);
+
+  // EFECTO: Traer las prendas vivas desde la base de datos al montar la web
+  useEffect(() => {
+    async function descargarProductos() {
+      try {
+        setCargando(true);
+        const { data, error } = await supabase
+          .from('productos')
+          .select('*')
+          .order('id', { ascending: false }); // Los más nuevos primero
+
+        if (error) throw error;
+        if (data) setProductos(data);
+      } catch (err: any) {
+        console.error("Error cargando productos de Supabase:", err.message);
+      } finally {
+        setCargando(false);
+      }
+    }
+    descargarProductos();
+  }, []);
+
+  // Función auxiliar para dar el formato de moneda paraguaya
+  const formatearGuaranies = (valor: number) => {
+    return `Gs. ${valor.toLocaleString('es-PY')}`;
+  };
 
   const handleComprar = (prod: any) => {
-    agregarAlCarrito(prod);
+    agregarAlCarrito({
+      id: prod.id,
+      titulo: prod.titulo,
+      tienda: prod.tienda,
+      precio: prod.precio,
+      imagen: prod.imagen,
+      cantidad: 1
+    });
     setIsOpen(true); 
   };
 
-  // 3. Filtrado en tiempo real de tu array estático
+  // FILTRADO DINÁMICO EN TIEMPO REAL
   const productosFiltrados = categoriaActiva === 'Todos'
-    ? CATALOGO_EXCLUSIVO
-    : CATALOGO_EXCLUSIVO.filter(p => p.categoria === categoriaActiva);
+    ? productos
+    : productos.filter(p => p.categoria?.toLowerCase() === categoriaActiva.toLowerCase());
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-[#545454] antialiased selection:bg-purple-100 font-sans tracking-tight">
@@ -188,7 +185,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 4. BOTONES DE FILTRADO (Insertados con diseño coherente) */}
+        {/* BOTONES DE FILTRADO DINÁMICOS */}
         <div className="flex items-center gap-2 overflow-x-auto pb-8 mb-8 border-b border-gray-100 scrollbar-none">
           {CATEGORIAS.map((cat) => (
             <button
@@ -205,8 +202,12 @@ export default function Home() {
           ))}
         </div>
 
-        {/* GRILLA DE PRODUCTOS FILTRADOS */}
-        {productosFiltrados.length === 0 ? (
+        {/* COMPONENTE DE CARGA / GRILLA */}
+        {cargando ? (
+          <div className="text-center py-20 text-xs font-bold uppercase tracking-widest text-gray-400 animate-pulse">
+            Sincronizando el armario con Supabase...
+          </div>
+        ) : productosFiltrados.length === 0 ? (
           <div className="text-center py-16 bg-gray-50/50 rounded-2xl border border-gray-100 text-xs text-gray-400 font-medium tracking-wide uppercase">
             No hay artículos disponibles bajo la categoría {categoriaActiva}.
           </div>
@@ -242,8 +243,8 @@ export default function Home() {
                         {prod.titulo}
                       </h3>
                     </Link>
-                    <p className="text-sm font-medium pt-1 font-mono text-gray-600">
-                      {prod.precioTexto}
+                    <p className="text-sm font-bold pt-1 font-mono text-gray-900">
+                      {formatearGuaranies(prod.precio)}
                     </p>
                   </div>
 
