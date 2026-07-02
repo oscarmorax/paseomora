@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import Link from 'next/link'; // ← Importante: Agregamos la importación para poder usar <Link>
+import Link from 'next/link'; 
 import { X, ShoppingBag, Trash2, ArrowRight, Plus, Minus } from 'lucide-react';
 import { useCart } from './CartContext';
 
@@ -117,7 +117,7 @@ export default function CartSidebar() {
                 <div className="space-y-1">
                   <p className="text-xs font-black uppercase tracking-widest text-gray-900">Tu bolsa está vacía</p>
                   <p className="text-[11px] text-gray-400 max-w-[200px] mx-auto font-normal leading-relaxed">
-                    Recorré la galería y seleccioná piezas únicas de autor.
+                    Recorré la galería y seleccioná piezas uniques de autor.
                   </p>
                 </div>
                 <button 
@@ -155,8 +155,17 @@ export default function CartSidebar() {
                 </span>
               </div>
 
-              {/* AQUÍ ESTÁ EL CAMBIO SOLICITADO */}
-              <Link href="/checkout" onClick={() => setIsOpen(false)} className="block w-full">
+              {/* CONEXIÓN DIRECTA A LA PÁGINA DE ÉXITO CON COPIA DE SEGURIDAD */}
+              <Link 
+                href="/checkout-exito" 
+                onClick={() => {
+                  // 1. Guardamos los items actuales en el localStorage para que la página de éxito los pueda leer
+                  localStorage.setItem('carrito', JSON.stringify(items));
+                  // 2. Cerramos el sidebar
+                  setIsOpen(false);
+                }} 
+                className="block w-full"
+              >
                 <button 
                   className="w-full text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-[0.25em] transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:opacity-95 transform hover:-translate-y-0.5 cursor-pointer mt-2"
                   style={{ backgroundColor: '#572364' }}
